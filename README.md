@@ -24,7 +24,7 @@ A better solution for logging in Android and Java Projects
 
 ## 2. How to import to your project
 
-
+[![](https://jitpack.io/v/dinhthaidaica/TLogger.svg)](https://jitpack.io/#dinhthaidaica/TLogger)
 
 ## 3. Customize
 
