@@ -1,5 +1,6 @@
 package android.dtdc.libs.tlog
 
+import android.content.pm.ApplicationInfo
 import android.util.Log
 
 /**
@@ -7,12 +8,11 @@ import android.util.Log
  */
 object TLog {
 
-
     private const val TRACE_INDEX_FILE_NAME = 4
     private const val TRACE_INDEX_METHOD_NAME = 3
 
     var tag = "TLog"
-    var showLog = BuildConfig.DEBUG
+    var showLog = ApplicationInfo.FLAG_DEBUGGABLE != 0
 
     private const val V = 0
     private const val D = 1
@@ -62,17 +62,16 @@ object TLog {
             info = getLogInfo(TRACE_INDEX_METHOD_NAME)
         }
         if (showLog) {
-            val fullLog = info.methodName + "(" + info.lineNumber + ") " + logString
             when (type) {
-                V -> Log.v(tag, info.fileName + " : " + fullLog)
+                V -> Log.v(tag, generateLogString(info, logString))
 
-                D -> Log.d(tag, info.fileName + " : " + fullLog)
+                D -> Log.d(tag, generateLogString(info, logString))
 
-                I -> Log.i(tag, info.fileName + " : " + fullLog)
+                I -> Log.i(tag, generateLogString(info, logString))
 
-                W -> Log.w(tag, info.fileName + " : " + fullLog)
+                W -> Log.w(tag, generateLogString(info, logString))
 
-                E -> { Log.e(tag, info.fileName + " : " + fullLog)
+                E -> { Log.e(tag, generateLogString(info, logString))
                     if (values[0] is Exception) {
                         val e = values[0] as Exception
                         e.printStackTrace()
@@ -85,6 +84,11 @@ object TLog {
         }
     }
 
+    private fun generateLogString(info: LogInformation, content: String): String {
+        val fullLog = info.methodName + content
+        return "(${info.fileName}:${info.lineNumber}) : $fullLog"
+    }
+
     private fun getLogInfo(index: Int): LogInformation {
         val information = LogInformation()
         val stackTrace = Throwable().fillInStackTrace()
@@ -92,7 +96,7 @@ object TLog {
         if (index + 1 < traceElements.size) {
 
             if (traceElements[index].fileName != null) {
-                information.fileName = traceElements[index].fileName.removeFileNameExtension()
+                information.fileName = traceElements[index].fileName
             } else { // can not get file name
                 information.fileName = "-"
             }
@@ -100,8 +104,8 @@ object TLog {
 
             if (information.fileName.compareTo("ActivityFont") == 0 || information.fileName.compareTo("ActivityThread") == 0) {
                 if (traceElements[index + 1].fileName != null) {
-                    information.fileName =
-                        traceElements[index].fileName.removeFileNameExtension()
+                    val fileName: String = traceElements[index].fileName
+                    information.fileName = fileName
                 } else {
                     information.fileName = "-"
                 }
@@ -116,7 +120,4 @@ object TLog {
         }
         return information
     }
-
-    private fun String.removeFileNameExtension() =
-        this.replace(".java".toRegex(), "").replace(".kt".toRegex(), "")
 }
